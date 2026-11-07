@@ -1,0 +1,33 @@
+name: Hadivpn
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vpn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-vpn
+
+      - name: Enable IP Forwarding
+        run: |
+          sudo sysctl -w net.ipv4.ip_forward=1
+          sudo sysctl -w net.ipv6.conf.all.forwarding=1
+
+      - name: Advertise Exit Node
+        run: |
+          sudo tailscale set --advertise-exit-node
+          sudo tailscale up
+          tailscale status
+          tailscale ip -4
+
+      - name: Keep VPN Online
+        run: |
+          while true; do sleep 60; done
