@@ -1,4 +1,4 @@
-name: Tailscale connection test
+name: Tailscale Exit Node
 
 on:
   workflow_dispatch:
@@ -7,19 +7,26 @@ permissions:
   contents: read
 
 jobs:
-  connect:
+  exit-node:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 350
     steps:
-      - name: Connect to Tailscale
+      - name: Enable IP forwarding
+        shell: bash
+        run: |
+          sudo sysctl -w net.ipv4.ip_forward=1
+          sudo sysctl -w net.ipv6.conf.all.forwarding=1
+
+      - name: Connect to Tailscale and advertise exit node
         uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
+          args: --advertise-exit-node
           log-mode: normal
 
-      - name: Verify Tailscale connection
+      - name: Verify exit-node advertisement
         shell: bash
         run: |
           echo "Tailscale status:"
@@ -28,5 +35,15 @@ jobs:
           echo "Runner Tailscale IPv4:"
           tailscale ip -4
           echo
-          echo "Runner network interfaces:"
-          ip -brief address
+          echo "IP forwarding:"
+          sysctl net.ipv4.ip_forward
+          sysctl net.ipv6.conf.all.forwarding
+
+      - name: Keep exit node online
+        shell: bash
+        run: |
+          echo "Exit node will remain online while this job is running."
+          while true; do
+            sleep 60
+            tailscale status
+          done
