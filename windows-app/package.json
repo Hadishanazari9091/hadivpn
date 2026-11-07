@@ -1,0 +1,23 @@
+{
+  "name": "hadex-vpn-windows",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal Hadex VPN desktop controller for the installed Tailscale client",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "ir.hadex.vpn",
+    "productName": "Hadex VPN",
+    "directories": { "output": "dist" },
+    "files": ["**/*", "!dist/**"],
+    "win": { "target": "nsis" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+  }
+}
