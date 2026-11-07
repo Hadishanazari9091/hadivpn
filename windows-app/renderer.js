@@ -1,0 +1,8 @@
+const $ = (id) => document.getElementById(id);
+const nodes = $("nodes"), message = $("message");
+let status = null;
+function showError(error) { message.textContent = error?.message || String(error); $("statusTitle").textContent = "Not connected"; $("statusDetail").textContent = "Check Tailscale installation and permissions"; $("statusDot").style.background = "#e4a64b"; }
+async function refresh() { try { status = await window.hadexVpn.getStatus(); const current = status.exitNode; $("statusTitle").textContent = current ? "Connected through an exit node" : "Tailscale is connected"; $("statusDetail").textContent = current ? "Exit node is active" : "Choose an available exit node below"; $("statusDot").style.background = current ? "#35d39a" : "#e4a64b"; nodes.replaceChildren(); if (!status.exitNodes.length) nodes.add(new Option("No approved exit nodes found", "")); else for (const node of status.exitNodes) nodes.add(new Option(node.name + " · " + node.ip, node.ip)); $("connect").disabled = !status.exitNodes.length; $("disconnect").disabled = !current; message.textContent = "Found " + status.exitNodes.length + " available exit node(s)."; } catch (error) { showError(error); } }
+$("connect").addEventListener("click", async () => { try { if (!nodes.value) return; $("connect").disabled = true; await window.hadexVpn.connect(nodes.value); message.textContent = "Exit node selected."; await refresh(); } catch (error) { showError(error); } });
+$("disconnect").addEventListener("click", async () => { try { await window.hadexVpn.disconnect(); message.textContent = "Exit node disconnected."; await refresh(); } catch (error) { showError(error); } });
+$("refresh").addEventListener("click", refresh); refresh();
