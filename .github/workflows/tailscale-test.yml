@@ -1,0 +1,32 @@
+name: Tailscale connection test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          log-mode: normal
+
+      - name: Verify Tailscale connection
+        shell: bash
+        run: |
+          echo "Tailscale status:"
+          tailscale status
+          echo
+          echo "Runner Tailscale IPv4:"
+          tailscale ip -4
+          echo
+          echo "Runner network interfaces:"
+          ip -brief address
