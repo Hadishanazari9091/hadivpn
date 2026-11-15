@@ -39,6 +39,28 @@ jobs:
           sysctl net.ipv4.ip_forward
           sysctl net.ipv6.conf.all.forwarding
 
+      - name: Diagnose runner internet and NAT
+        shell: bash
+        run: |
+          echo "===== PUBLIC IPv4 ====="
+          curl -4 --max-time 15 -sS https://api.ipify.org || true
+          echo
+          echo "===== DEFAULT ROUTE ====="
+          ip route
+          echo
+          echo "===== IP FORWARDING ====="
+          sysctl net.ipv4.ip_forward
+          sysctl net.ipv6.conf.all.forwarding
+          echo
+          echo "===== NAT POSTROUTING ====="
+          sudo iptables -t nat -L POSTROUTING -n -v || true
+          echo
+          echo "===== FORWARD CHAIN ====="
+          sudo iptables -L FORWARD -n -v || true
+          echo
+          echo "===== INTERNET HTTPS TEST ====="
+          curl -I -4 --max-time 15 https://1.1.1.1 || true
+
       - name: Keep exit node online
         shell: bash
         run: |
