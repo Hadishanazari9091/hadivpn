@@ -55,17 +55,34 @@ jobs:
           echo "===== NAT POSTROUTING ====="
           sudo iptables -t nat -L POSTROUTING -n -v || true
           echo
+          echo "===== TAILSCALE NAT CHAIN ====="
+          sudo iptables -t nat -L ts-postrouting -n -v || true
+          echo
           echo "===== FORWARD CHAIN ====="
           sudo iptables -L FORWARD -n -v || true
+          echo
+          echo "===== TAILSCALE FORWARD CHAIN ====="
+          sudo iptables -L ts-forward -n -v || true
+          echo
+          echo "===== TAILSCALE FORWARD RULES ====="
+          sudo iptables -S ts-forward || true
           echo
           echo "===== INTERNET HTTPS TEST ====="
           curl -I -4 --max-time 15 https://1.1.1.1 || true
 
-      - name: Keep exit node online
+      - name: Keep exit node online and monitor traffic
         shell: bash
         run: |
-          echo "Exit node will remain online while this job is running."
+          echo "Exit node online. Use it from the Windows client, then inspect these counters."
           while true; do
             sleep 60
+            echo
+            echo "===== LIVE TAILSCALE FORWARD COUNTERS ====="
+            sudo iptables -L ts-forward -n -v || true
+            echo
+            echo "===== LIVE TAILSCALE NAT COUNTERS ====="
+            sudo iptables -t nat -L ts-postrouting -n -v || true
+            echo
+            echo "===== TAILSCALE STATUS ====="
             tailscale status
           done
